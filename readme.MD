@@ -1,7 +1,7 @@
 # Problem:
 
 We have a source data - mongodb. And, we have a source target data - also mongodb.
-We want to migrate data from the source to the target storage with minimal downtime for services that work with source db and the target db
+We want to migrate data from the source to the target storage with minimal downtime for services that work with source db and the target db.
 Let’s assume that our source db has many apps working with it (more than 100), all of them are writing/reading/updating source db.
 Also, there are more than 100 services that work with target db. They also write/read a lot.
 There is a database named “test” in the source db. A collection of “users” exists in the “test”, the users collection has a document structure (mongodb)
@@ -19,8 +19,8 @@ Get the structure from the source db/test/users to target db/test/users saving a
 Ensure the migration of data from the source db to the target db while maintaining the data structure.
 We need to use:
 + Kafka in a single-node installation mongodb Source.
-	+ Kafka in a single-node installation mongodb Target
-	+ Kafka in a single-node installation kafka-connect in a single-node installation
++ Kafka in a single-node installation mongodb Target
++ Kafka in a single-node installation kafka-connect in a single-node installation
 
 # Note:
 Need to use Docker Image because services are many
@@ -29,7 +29,7 @@ In order for this task to be solved, it’s just not possible to read data in mo
 Operation Log This oplog is only available after the base has started in replicaSet mode. The ReplicaSet mode does not require a cluster, you can run it on one mongoDB node, but if you want, you can raise the full replicaSet in at least three nodes.
 
 # Architecture
-
+![Architecture](./architecture.jpg "Kafka Connect")
 # Run book
 
 1. Start Kafka Connect and MongoDB environment
@@ -71,55 +71,56 @@ It should prompted **100** (since we have generated 100 records to the users col
 
 **Copy the following config to the vim editor:**
 
-{
+    {
+        "name": "mongo-source-connect",
 
-  "name": "mongo-source-connect",
+        "config": {
 
-  "config": {
-
-    "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
-    "connection.uri": "mongodb://mongo-source",
-    "database": "test",
-    "collection": "users",
-    "startup.mode": "copy_existing"
-  }
-}
+            "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
+            "connection.uri": "mongodb://mongo-source",
+            "database": "test",
+            "collection": "users",
+            "startup.mode": "copy_existing"
+        }
+    }
 
 **Start the source connector**
 
 `cx kafka-source-connect.json`
 
-**Monitor status of connector**
+**Monitor status of source connector**
 
 `status`
 
 If your source connector started successfully, you should see the following output:
 
+{
 
-`Kafka topics:
+    `Kafka topics:
 
-"topic": "docker-connect-status",
-"topic": "__consumer_offsets",
-"topic": "test.users",
-"topic": "docker-connect-offsets",
-"topic": "docker-connect-configs"
-...
+    "topic": "docker-connect-status",
+    "topic": "__consumer_offsets",
+    "topic": "test.users",
+    "topic": "docker-connect-offsets",
+    "topic": "docker-connect-configs"
+    ...
 
-The status of the connectors:
+    The status of the connectors:
 
-source  |  mongo-cdc-source  |  RUNNING  |  RUNNING  |  com.mongodb.kafka.
-connect.MongoSourceConnector
+    source  |  mongo-cdc-source  |  RUNNING  |  RUNNING  |  com.mongodb.kafka.
+    connect.MongoSourceConnector
 
-Currently configured connectors
+    Currently configured connectors
 
-[
+    [
 
-"mongo-source-connect"
+    "mongo-source-connect"
 
-]
-...
+    ]
+    ...
 
-`
+    `
+}
 
 4. **Monitor topic test.users**
 
@@ -150,17 +151,19 @@ It should prompt:
 
 Paste following config to the vim editor:
 
-{
-  "name": "mongo-sink-connect",
-  "config": {
-    "connector.class": "com.mongodb.kafka.connect.MongoSinkConnector",
-    "topics": "test.users",
-    "change.data.capture.handler": "com.mongodb.kafka.connect.sink.cdc.mongodb.ChangeStreamHandler",
-    "connection.uri": "mongodb://mongo-target",
-    "database": "test",
-    "collection": "users"
-  }
-}
+
+    {
+        "name": "mongo-sink-connect",
+        "config": {
+            "connector.class": "com.mongodb.kafka.connect.MongoSinkConnector",
+            "topics": "test.users",
+            "change.data.capture.handler": "com.mongodb.kafka.connect.sink.cdc.mongodb.ChangeStreamHandler",
+            "connection.uri": "mongodb://mongo-target",
+            "database": "test",
+            "collection": "users"
+        }
+    }
+
 
 **Start Sink connector**
 `cx kafka-sink-connector.json`
