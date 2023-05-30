@@ -1,7 +1,7 @@
 FROM mongo:6.0.5
 
-COPY target/config-replica-target.js /
-COPY target/.bashrc /data/db/.bashrc
+COPY ./target/config-replica-target.js /
+COPY ./target/.bashrc /data/db/.bashrc
 COPY requirements.txt /
 RUN mkdir /scratch_space
 ADD utils /usr/local/bin
@@ -20,10 +20,7 @@ RUN apt-get install -y bsdmainutils
 RUN apt-get install -y kafkacat
 RUN apt-get install -y git
 RUN apt-get install -y dos2unix
-RUN git clone https://github.com/RWaltersMA/stockgenmongo.git
-
 
 RUN dos2unix /usr/local/bin/*
 RUN dos2unix /data/db/.bashrc
 RUN pip3 install -r /requirements.txt
-RUN pip3 install -r /stockgenmongo/requirements.txt
