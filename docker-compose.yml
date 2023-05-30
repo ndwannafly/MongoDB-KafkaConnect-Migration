@@ -5,7 +5,7 @@ services:
     hostname: zookeeper
     container_name: zookeeper
     networks:
-      - localnet
+      - dns
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -17,7 +17,7 @@ services:
     depends_on:
       - zookeeper
     networks:
-      - localnet
+      - dns
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
@@ -42,7 +42,7 @@ services:
       - zookeeper
       - broker
     networks:
-      - localnet
+      - dns
     environment:
       KAFKA_JMX_PORT: 35000
       KAFKA_JMX_HOSTNAME: localhost
@@ -74,7 +74,7 @@ services:
     hostname: rest-proxy
     container_name: rest-proxy
     networks:
-      - localnet
+      - dns
     environment:
       KAFKA_REST_HOST_NAME: rest-proxy
       KAFKA_REST_BOOTSTRAP_SERVERS: "broker:29092"
@@ -88,7 +88,7 @@ services:
     depends_on:
       - broker
     networks:
-      - localnet
+      - dns
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "broker:29092"
@@ -111,7 +111,7 @@ services:
       - broker
       - connect
     networks:
-      - localnet
+      - dns
     restart: always
 
   mongo-target:
@@ -130,7 +130,7 @@ services:
       - broker
       - connect
     networks:
-      - localnet
+      - dns
     restart: always
 
   mongo-source-setup:
@@ -142,7 +142,7 @@ services:
     depends_on:
       - mongo-source
     networks:
-      - localnet
+      - dns
     entrypoint:
       [
         "bash",
@@ -160,7 +160,7 @@ services:
     depends_on:
       - mongo-target
     networks:
-      - localnet
+      - dns
     entrypoint:
       [
         "bash",
@@ -170,5 +170,5 @@ services:
     restart: "no"
 
 networks:
-  localnet:
+  dns:
     attachable: true

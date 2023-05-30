@@ -7,7 +7,7 @@ db = client['test']
 collection = db['users']
 fake = Faker()
 
-for i in range(100):
+for i in range(10000):
     # Generate the data for the document
     data = {
         'name': fake.name(),
