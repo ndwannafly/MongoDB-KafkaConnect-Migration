@@ -6,13 +6,37 @@ Let’s assume that our source db has many apps working with it (more than 100),
 Also, there are more than 100 services that work with target db. They also write/read a lot.
 There is a database named “test” in the source db. A collection of “users” exists in the “test”, the users collection has a document structure (mongodb)
 
-{
+now we have a problem... The developers first had a MongoDb schema in the users collection like this
+
+
   "_id": Number(),
+
   "firstname": String(),
+
   "lastname": String(),
+
   "age": Number(),
+
   "email": String()
-}
+
+
+
+
+then other developers came and something changed, now the scheme is like this:
+
+   "_id": Number(),
+
+   "firstname": String(),
+
+   "lastname": String(),
+
+   "age": Number(),
+
+   "email": String(),
+
+   "sex": String(),
+
+
 
 # Requirement:
 Get the structure from the source db/test/users to target db/test/users saving all data.
@@ -21,6 +45,7 @@ We need to use:
 + Kafka in a single-node installation mongodb Source.
 + Kafka in a single-node installation mongodb Target
 + Kafka in a single-node installation kafka-connect in a single-node installation
++ Worker in a single-node installation that read from kafka topics and write to target DB
 
 # Note:
 Need to use Docker Image because services are many
