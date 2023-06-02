@@ -2,7 +2,7 @@
 
 echo -e "\nKafka topics:\n"
 
-kafkacat -b broker  -L -J |  jq '.topics' | grep 'topic'
+kafkacat -b kafka  -L -J |  jq '.topics' | grep 'topic'
 
 echo -e "\nThe status of the connectors:\n"
 

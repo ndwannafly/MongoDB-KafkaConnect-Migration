@@ -10,10 +10,10 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
-  broker:
+  kafka:
     image: confluentinc/cp-kafka:7.2.2
-    hostname: broker
-    container_name: broker
+    hostname: kafka
+    container_name: kafka
     depends_on:
       - zookeeper
     networks:
@@ -21,10 +21,10 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_LISTENERS: LISTENER_1://broker:29092,LISTENER_2://broker:9092
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_1://broker:29092,LISTENER_2://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_1:PLAINTEXT,LISTENER_2:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_1
+      # KAFKA_LISTENERS: LISTENER_1://broker:29092,LISTENER_2://broker:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       CONFLUENT_SUPPORT_CUSTOMER_ID: "anonymous"
@@ -40,13 +40,13 @@ services:
     container_name: connect
     depends_on:
       - zookeeper
-      - broker
+      - kafka
     networks:
       - dns
     environment:
       KAFKA_JMX_PORT: 35000
       KAFKA_JMX_HOSTNAME: localhost
-      CONNECT_BOOTSTRAP_SERVERS: "broker:29092"
+      CONNECT_BOOTSTRAP_SERVERS: "kafka:9092"
       CONNECT_REST_ADVERTISED_HOST_NAME: connect
       CONNECT_REST_PORT: 8083
       CONNECT_GROUP_ID: connect-cluster-group
@@ -78,7 +78,7 @@ services:
     command: --replSet rs0 --oplogSize 128
     depends_on:
       - zookeeper
-      - broker
+      - kafka
       - connect
     networks:
       - dns
@@ -97,7 +97,7 @@ services:
     command: --replSet rs1 --oplogSize 128
     depends_on:
       - zookeeper
-      - broker
+      - kafka
       - connect
     networks:
       - dns
@@ -138,31 +138,23 @@ services:
         "sleep 10 && mongosh --host mongo-target:27017 config-replica-target.js && sleep 10",
       ]
     restart: "no"
-
-  faust-worker:
-    tty: true
+  worker:
     build: ./worker
-    command: faust -A app worker -l info
     depends_on:
-      - broker
+      - kafka
       - connect
       - zookeeper
-    environment:
-      - WORKER=example
-      - WORKER_PORT=6066
-      - KAFKA_BOOTSTRAP_SERVER=kafka://kafka:9092
-      - KAFKA_BOOSTRAP_SERVER_NAME=kafka
-      - KAFKA_BOOSTRAP_SERVER_PORT=9092
-      - SCHEMA_REGISTRY_URL=http://schema-registry:8081
-      - SCHEMA_REGISTRY_SERVER=schema-registry
-      - SCHEMA_REGISTRY_SERVER_PORT=8081
-    ports:
-      - "8084:80"
-      - "8000:8000"
-    volumes:
-      - ./scripts:/faust-project/scripts
+      - mongo-target
+      - mongo-source
     networks:
       - dns
+    entrypoint:
+      [
+        "bash",
+      "-c",
+        "sleep 20 && python3 ./app.py",
+      ]
+
 networks:
   dns:
     attachable: true

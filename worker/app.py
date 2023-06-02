@@ -1,31 +1,21 @@
-import os
-import faust
+from kafka import KafkaConsumer
 import pymongo
-
-app = faust.App('app')
-
-@app.on_configured.connect
-def configure(app, conf, **kwargs):
-    conf.broker = 'kafka://broker:9092;broker:29092'
+from json import loads
 
 mongo_client = pymongo.MongoClient('mongodb://mongo-target:27017')
 mongo_collection = mongo_client['test']['users']
 
-class MyRecord(faust.Record):
-    name: str
-    age: int
-    email: str
+topic = 'test.users'
+bootstrap_servers = 'kafka:9092'
+consumer = KafkaConsumer(
+    topic, bootstrap_servers=bootstrap_servers, auto_offset_reset='earliest',
+    enable_auto_commit=True,
+    value_deserializer=lambda x: loads(x.decode('utf-8'))
+    )
 
-    @property
-    def sex(self):
-        return "male"
-
-@app.agent(topic='test.users')
-async def even_records(records):
-    async for record in records.filter(lambda r: r.even):
-        my_record = MyRecord(name=record.name, age=record.age, even=record.email)
-        my_record.sex = my_record.sex  # add a new field
-        mongo_collection.insert(my_record.asdict())  # insert to MongoDB
-
-if __name__ == '__main__':
-    app.main()
+for msg in consumer:
+    print(msg.value)
+    try:
+        mongo_collection.insert_one(msg.value)
+    except Exception as e:
+        print(f"Error writing message {e}")
