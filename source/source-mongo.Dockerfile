@@ -4,6 +4,7 @@ COPY ./source/config-replica-source.js /
 COPY ./source/.bashrc /data/db/.bashrc
 COPY gen_data.py /
 COPY requirements.txt /
+COPY ./source/kafka-source-config.json /
 RUN mkdir /scratch_space
 ADD utils /usr/local/bin
 RUN chmod +x /usr/local/bin/cx

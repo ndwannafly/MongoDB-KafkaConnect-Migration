@@ -54,7 +54,7 @@ In order for this task to be solved, it’s just not possible to read data in mo
 Operation Log This oplog is only available after the base has started in replicaSet mode. The ReplicaSet mode does not require a cluster, you can run it on one mongoDB node, but if you want, you can raise the full replicaSet in at least three nodes.
 
 # Architecture
-![Architecture](./architecture.jpg "Kafka Connect")
+![Architecture](./kafka-worker.png "Kafka worker")
 # Run book
 
 1. Start Kafka Connect and MongoDB environment
