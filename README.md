@@ -220,3 +220,5 @@ By startup, Connector fetches all existing data from Mongo Source to Kafka. We m
 Then, let mongo Target start consuming data from Kafka. From now, all new opeartions to Mongo Source have synced to Mongo Target. We can **gracefully** switch which mongoDB that apps are going to interact with.
 
 As a result, downtime = time switching DB (**Gracefully shutdown**)
+
+Please check branch "faust-worker" for task2
