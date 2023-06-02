@@ -34,7 +34,7 @@ Operation Log This oplog is only available after the base has started in replica
 
 1. Start Kafka Connect and MongoDB environment
 
-`docker-compose -p mongo-kafka-connect up`
+`docker-compos up --build`
 
 Wait until all services get running. Open two interactive shells:
 
@@ -131,11 +131,11 @@ Wait until it prompts "... at offset 100", it means that kafka has consumed all 
 **...% Reached end of topic test.users [0] at offset 100**
 
 
-5. **Config And Start Sink Connector**
+5. **Check worker read the topic and write to Mongo Target**
 
 Open **shell_target**:
 
-**Check if mongo-target is empty at the moment**:
+**Check if mongo-target is written by worker**:
 
 `mongosh "mongodb://mongo-target"`
 
@@ -143,42 +143,10 @@ Open **shell_target**:
 
 It should prompt:
 
-`0`
-
-**Config Sink Connector**
-
-`vim kafka-sink-connector`
-
-Paste following config to the vim editor:
+`100`
 
 
-    {
-        "name": "mongo-sink-connect",
-        "config": {
-            "connector.class": "com.mongodb.kafka.connect.MongoSinkConnector",
-            "topics": "test.users",
-            "change.data.capture.handler": "com.mongodb.kafka.connect.sink.cdc.mongodb.ChangeStreamHandler",
-            "connection.uri": "mongodb://mongo-target",
-            "database": "test",
-            "collection": "users"
-        }
-    }
-
-
-**Start Sink connector**
-`cx kafka-sink-connector.json`
-
-**Check if mongo-target is now sync with mongo-source**
-
-`mongosh "mongodb://mongo-target"`
-
-`db.users.countDocuments()`
-
-It should prompt:
-
-`0`
-
-6. Test Change Data Capture Handler
+1. Test add new record to mongo source and worker will sync it to mongo target
 
 Open shell_source:
 
@@ -191,7 +159,8 @@ db.users.insertOne({
   "firstname": "duc",
   "lastname": "nguyen",
   "age": 22,
-  "email": "itsme@gmail.com"
+  "email": "itsme@gmail.com",
+  "sex": "female"
 })
 
 **Check kafka offset**
@@ -215,8 +184,7 @@ It should prompt:
 
 # Conclusion:
 
-We solved the problem of migrating data from existing MongoDB data source to MongoDB data sink by using Kafka Connect.
-By startup, Connector fetches all existing data from Mongo Source to Kafka. We monitor this process and wait until all data gets synced completely.
-Then, let mongo Target start consuming data from Kafka. From now, all new opeartions to Mongo Source have synced to Mongo Target. We can **gracefully** change the Mongo config which apps have been interacting with.
+We created worker as python script which read data from kafka topic and write it to Mongo Target. By this approach, Mongo target doesn't need to subcribe to the kafka topic. Event is consumed by worker and then write to target db.
 
-As a result, downtime = time switching DB (**Gracefully shutdown**)
+How can we apply it in practice?
+    Let's say we using 3rd-party service such as Amazon Cognito. We keep writing "users" data to both Amazon Cognito and our Backend DB. For example, we don't want to save all unnecesary fields such as "age" or "sex" (the less data - the less money charging), then this approach using worker as a filter is good idea. Because sometimes we can't aware of what objects sent to DB by clients, using a filter is a safe way to specify which fields are written to db. Moreover, it's also scalable, we can scale number of instances of worker.
