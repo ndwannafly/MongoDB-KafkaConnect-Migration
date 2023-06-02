@@ -217,6 +217,6 @@ It should prompt:
 
 We solved the problem of migrating data from existing MongoDB data source to MongoDB data sink by using Kafka Connect.
 By startup, Connector fetches all existing data from Mongo Source to Kafka. We monitor this process and wait until all data gets synced completely.
-Then, let mongo Target start consuming data from Kafka. From now, all new opeartions to Mongo Source have synced to Mongo Target. We can **gracefully** change the Mongo config which apps have been interacting with.
+Then, let mongo Target start consuming data from Kafka. From now, all new opeartions to Mongo Source have synced to Mongo Target. We can **gracefully** switch which mongoDB that apps are going to interact with.
 
 As a result, downtime = time switching DB (**Gracefully shutdown**)
